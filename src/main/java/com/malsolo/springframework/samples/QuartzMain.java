@@ -16,10 +16,10 @@ import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.transaction.PlatformTransactionManager;
 
 @Configuration
-@ImportResource({"classpath:META-INF/spring/applicationContext-quartz.xml", "classpath:META-INF/spring/properties-config.xml"})
+@ImportResource({"classpath:META-INF/spring/applicationContext-quartz-persisted.xml", "classpath:META-INF/spring/properties-config.xml"})
 public class QuartzMain {
 	
-	private static final long TIEMPO_ESPERA_POR_QUARTZ = TimeUnit.HOURS.toMillis(1);
+	private static final long TIEMPO_ESPERA_POR_QUARTZ = TimeUnit.MINUTES.toMillis(5); //TimeUnit.HOURS.toMillis(1);
 
 	private @Value("${jdbc.url}") String url;
 	private @Value("${jdbc.driverClassName}") String driverClassName;
@@ -28,6 +28,8 @@ public class QuartzMain {
 
 
 	final static Logger logger = LoggerFactory.getLogger(QuartzMain.class);
+	
+	private Object monitor = new Object();
 
 	@Bean
 	public DataSource dataSource() {
@@ -63,6 +65,7 @@ public class QuartzMain {
 		ctx.refresh();
 		logger.info("····· Refresh ");
 		QuartzMain main = ctx.getBean(QuartzMain.class);
+//		main.killer();
 		main.doSomeStuff();
 		if (Thread.currentThread().isInterrupted()) {
 			logger.info("Why the thread named {} has been interrupted?", Thread.currentThread().getName());
@@ -74,10 +77,14 @@ public class QuartzMain {
 	public void doSomeStuff() {
 		String msg = "STUFFING {}";
 		logger.info(msg, "...");
+		
 		try {
 			logger.warn("A esperar {} ms ", TIEMPO_ESPERA_POR_QUARTZ);
+//			monitor.wait(TIEMPO_ESPERA_POR_QUARTZ);
 			Thread.sleep(TIEMPO_ESPERA_POR_QUARTZ);
+			logger.info("Woke up after {} ms ", TIEMPO_ESPERA_POR_QUARTZ);
 		} catch (InterruptedException e) {
+			logger.error("Interrupted: {} ", e.getMessage());
 			Thread.currentThread().interrupt();
 		}
 		logger.info(msg, ". DONE.");
@@ -89,10 +96,18 @@ public class QuartzMain {
 			@Override
 			public void run() {
 				
-				
+				try {
+					Thread.sleep(5000);
+				} catch (InterruptedException e) {
+					logger.error("Interrupted: {} ", e.getMessage());
+					Thread.currentThread().interrupt();
+				}
+				logger.info("Let's kill my father ");
+				QuartzMain.this.monitor.notify();//java.lang.IllegalMonitorStateException because we are not the  owner of this object's monitor
+				logger.info("To quoque filli ");
 				
 			}
-		});
+		}, "KILLER");
 		
 		t.start();
 		
