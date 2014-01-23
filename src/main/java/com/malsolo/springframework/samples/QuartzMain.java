@@ -29,8 +29,6 @@ public class QuartzMain {
 
 	final static Logger logger = LoggerFactory.getLogger(QuartzMain.class);
 	
-	private Object monitor = new Object();
-
 	@Bean
 	public DataSource dataSource() {
 		BasicDataSource ds = new BasicDataSource();
@@ -65,11 +63,7 @@ public class QuartzMain {
 		ctx.refresh();
 		logger.info("····· Refresh ");
 		QuartzMain main = ctx.getBean(QuartzMain.class);
-//		main.killer();
 		main.doSomeStuff();
-		if (Thread.currentThread().isInterrupted()) {
-			logger.info("Why the thread named {} has been interrupted?", Thread.currentThread().getName());
-		}
 		ctx.close();
 		logger.info(">>>>> MAIN END <<<<< ");
 	}
@@ -80,7 +74,6 @@ public class QuartzMain {
 		
 		try {
 			logger.warn("A esperar {} ms ", TIEMPO_ESPERA_POR_QUARTZ);
-//			monitor.wait(TIEMPO_ESPERA_POR_QUARTZ);
 			Thread.sleep(TIEMPO_ESPERA_POR_QUARTZ);
 			logger.info("Woke up after {} ms ", TIEMPO_ESPERA_POR_QUARTZ);
 		} catch (InterruptedException e) {
@@ -90,28 +83,4 @@ public class QuartzMain {
 		logger.info(msg, ". DONE.");
 	}
 	
-	public void killer() {
-		Thread t = new Thread(new Runnable() {
-			
-			@Override
-			public void run() {
-				
-				try {
-					Thread.sleep(5000);
-				} catch (InterruptedException e) {
-					logger.error("Interrupted: {} ", e.getMessage());
-					Thread.currentThread().interrupt();
-				}
-				logger.info("Let's kill my father ");
-				QuartzMain.this.monitor.notify();//java.lang.IllegalMonitorStateException because we are not the  owner of this object's monitor
-				logger.info("To quoque filli ");
-				
-			}
-		}, "KILLER");
-		
-		t.start();
-		
-	}
-
-
 }
