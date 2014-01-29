@@ -15,6 +15,8 @@ public class ThreadMain {
 	public static void main(String... args) {
 
 		logger.info(">>>>> MAIN ");
+		
+		Runtime.getRuntime().addShutdownHook(new Thread(new BasicThreadMonitor()));
 
 		ThreadMain main = new ThreadMain();
 		Thread bill = Thread.currentThread();
