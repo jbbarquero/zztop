@@ -15,11 +15,14 @@ import org.springframework.context.annotation.ImportResource;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.transaction.PlatformTransactionManager;
 
+import com.malsolo.mercurious.scheduled.TesterSchedulers;
+
 @Configuration
-@ImportResource({"classpath:META-INF/spring/applicationContext-quartz-persisted.xml", "classpath:META-INF/spring/properties-config.xml"})
+//@ImportResource({"classpath:META-INF/spring/applicationContext-quartz-persisted.xml", "classpath:META-INF/spring/properties-config.xml"})
+@ImportResource({"classpath:META-INF/spring/applicationContext-quartz-non-persisted.xml", "classpath:META-INF/spring/properties-config.xml"})
 public class QuartzMain {
 	
-	private static final long TIEMPO_ESPERA_POR_QUARTZ = TimeUnit.MINUTES.toMillis(5); //TimeUnit.HOURS.toMillis(1);
+	private static final long TIEMPO_ESPERA_POR_QUARTZ = TimeUnit.MINUTES.toMillis(1); //TimeUnit.HOURS.toMillis(1);
 
 	private @Value("${jdbc.url}") String url;
 	private @Value("${jdbc.driverClassName}") String driverClassName;
@@ -63,6 +66,7 @@ public class QuartzMain {
 		ctx.refresh();
 		logger.info("····· Refresh ");
 		QuartzMain main = ctx.getBean(QuartzMain.class);
+		main.testSchedulers(ctx.getBean(TesterSchedulers.class));
 		main.doSomeStuff();
 		ctx.close();
 		logger.info(">>>>> MAIN END <<<<< ");
@@ -81,6 +85,21 @@ public class QuartzMain {
 			Thread.currentThread().interrupt();
 		}
 		logger.info(msg, ". DONE.");
+	}
+	
+	public void testSchedulers(final TesterSchedulers tester) {
+		Thread t  = new Thread( new Runnable() {
+			@Override
+			public void run() {
+				try {
+					Thread.sleep(TimeUnit.SECONDS.toMillis(10));
+					tester.test();
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		}, "TESTER-THREAD");
+		t.start();
 	}
 	
 }

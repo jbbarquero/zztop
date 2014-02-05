@@ -66,5 +66,11 @@
 
     <bean id="shadow" class="com.malsolo.mercurious.scheduled.ShadowImpl" />
     <bean id="ping" class="com.malsolo.mercurious.scheduled.PingImpl" />
+
+    <bean id="globalJobListener" class="com.malsolo.mercurious.scheduled.listeners.MalJobListener"/>
+    <bean id="globalTriggerListener" class="com.malsolo.mercurious.scheduled.listeners.MalTriggerListener"/>
+    <bean id="schedulerListener" class="com.malsolo.mercurious.scheduled.listeners.MalSchedulerListener"/>
+
+    <bean id="testerSchedulers" class="com.malsolo.mercurious.scheduled.TesterSchedulers" />
     
 </beans>
